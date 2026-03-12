@@ -1,288 +1,123 @@
 # AGENTS.md
 
-This file provides guidelines for AI agents working on the ReyPaletas backend codebase.
+Guidelines for AI agents working on the ReyPaletas backend.
 
 ## Project Overview
 
-- **Project Type:** Node.js/Express.js REST API Backend
-- **Package Manager:** npm
-- **Module System:** CommonJS (`"type": "commonjs"` in package.json)
-- **Runtime:** Node.js
-- **Key Dependencies:** Express 5.x
+- **Type:** Node.js/Express 5.x REST API Backend
+- **Module System:** CommonJS (`"type": "commonjs"`)
 - **External Services:** Supabase (auth + PostgreSQL), Resend (email)
 
 ## Directory Structure
 
 ```
-backend/
-├── ai/                   # AI agents, skills, and tasks (future use)
-│   ├── agents/
-│   ├── skills/
-│   └── tasks/
-├── docs/                 # Documentation
-│   ├── ARCHITECTURE.md
-│   ├── BUSINESS_LOGIC.md
-│   ├── DATA.md
-│   └── REPOSITORY_STRUCTURE.md
-├── src/                  # Source code (create as needed)
-│   ├── models/           # Database models & validation schemas
-│   ├── routes/           # Express route definitions
-│   ├── controllers/      # Request handlers
-│   ├── services/         # Business logic & external integrations
-│   ├── middlewares/      # Express middlewares (auth, validation)
-│   └── utils/            # Helper functions
-├── node_modules/
-├── package.json
-└── package-lock.json
+src/
+├── config/           # Configuration files
+├── models/           # Database schemas & validation (Joi)
+├── routes/           # Express route definitions
+├── controllers/      # Request handlers
+├── services/         # Business logic
+├── middlewares/      # Auth, validation, error handling
+└── utils/            # Helper functions
+docs/                 # ARCHITECTURE.md, BUSINESS_LOGIC.md, DATA.md
 ```
 
 ## Available Commands
 
-### Running the Server
-
 ```bash
-npm start           # Start the server (requires index.js entry point)
-node index.js       # Run directly
+# Development
+npm run dev          # Start server with nodemon (create nodemon.json first)
+node index.js        # Run directly
+
+# Testing (requires setup - see below)
+npm test             # Run all tests
+npx jest test/path   # Run single test file
+npx jest --watch    # Watch mode
+
+# Linting (requires setup - see below)
+npm run lint         # Run ESLint
+npm run lint -- --fix # Fix auto-fixable issues
 ```
 
-### Installing Dependencies
+## Required Setup
 
+Install dev dependencies:
 ```bash
-npm install         # Install all dependencies
+npm install --save-dev jest supertest eslint prettier eslint-config-prettier
+npm install joi dotenv
 ```
 
-### Testing
-
-Currently no test framework is configured. Recommended setup:
-
-```bash
-# Install testing dependencies
-npm install --save-dev jest supertest
-
-# Run all tests
-npm test
-
-# Run a single test file
-npx jest tests/filename.test.js
-
-# Run tests in watch mode
-npm test -- --watch
-```
-
-### Linting
-
-No linter is currently configured. Recommended setup:
-
-```bash
-# Install ESLint
-npm install --save-dev eslint
-
-# Initialize ESLint
-npx eslint --init
-
-# Run linting
-npm run lint
-
-# Fix auto-fixable issues
-npm run lint -- --fix
-```
-
-## Environment Variables
-
-Create a `.env` file in the root directory (copy from `.env.example`):
-
-```bash
-# Supabase Configuration
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-key
-
-# Resend (Email Service)
-RESEND_API_KEY=re_123456789
-
-# Server
-PORT=3000
-NODE_ENV=development
-
-# CORS
-CORS_ORIGIN=http://localhost:5173
-```
-
-**Important:** Never commit `.env` files to version control. Only `.env.example` should be tracked.
-
-## Code Style Guidelines
-
-### General Principles
-
-- Keep functions small and focused (single responsibility)
-- Business logic belongs in services, not controllers
-- Controllers should only handle request/response and call service functions
-- All responses to public endpoints should omit internal IDs
+## Code Style
 
 ### Naming Conventions
+- **Files:** kebab-case (`product-routes.js`, `auth-middleware.js`)
+- **Functions:** camelCase (`getProducts`, `validateCategory`)
+- **Classes:** PascalCase (`ProductService`, `AuthMiddleware`)
+- **Constants:** UPPER_SNAKE_CASE (`MAX_PRODUCTS`)
+- **DB Tables:** snake_case (`product_variants`)
 
-- **Files:** kebab-case (e.g., `product-routes.js`, `auth-middleware.js`)
-- **Functions:** camelCase (e.g., `getProducts`, `validateCategory`)
-- **Classes:** PascalCase (e.g., `ProductService`, `AuthMiddleware`)
-- **Constants:** UPPER_SNAKE_CASE (e.g., `MAX_PRODUCTS`, `DEFAULT_PAGE_SIZE`)
-- **Database Tables:** snake_case (e.g., `product_variants`, `announcements`)
-
-### Imports and Exports
-
+### Imports/Exports (CommonJS)
 ```javascript
-// Use CommonJS require/exports
 const express = require('express');
 const { supabase } = require('./config/supabase');
-const productService = require('../services/product-service');
+const productService = require('./services/product-service');
 
-// Export at end of file
 module.exports = router;
 ```
 
 ### Error Handling
-
-- Use try/catch for async operations
-- Return proper HTTP status codes:
-  - `200` - Success
-  - `201` - Created
-  - `400` - Bad Request
-  - `401` - Unauthorized
-  - `403` - Forbidden
-  - `404` - Not Found
-  - `500` - Internal Server Error
+- Use try/catch for all async operations
+- Return proper HTTP status codes: 200, 201, 400, 401, 403, 404, 500
 
 ```javascript
-// Example error handling pattern
-app.get('/products', async (req, res) => {
+// Controller pattern
+async function getProducts(req, res) {
   try {
     const products = await productService.getProducts(req.query);
-    res.status(200).json(products);
+    res.status(200).json({ data: products });
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error('Error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-});
+}
 ```
-
-### Async/Await
-
-- Always use async/await over callbacks or .then() chains
-- Always wrap in try/catch for error handling
-
-### Request Validation
-
-- Validate all input in middleware or at the start of controller functions
-- Use consistent validation error responses
 
 ### Response Format
-
-Follow these patterns for consistency:
-
 ```javascript
-// Success response
-res.status(200).json({ data: /* response data */ });
-
-// Creation response
-res.status(201).json({ data: /* created item */ });
-
-// Error response
-res.status(400).json({ error: 'Descriptive error message' });
+res.status(200).json({ data: result });
+res.status(201).json({ data: createdItem });
+res.status(400).json({ error: 'Descriptive message' });
 ```
 
-### Security
+### Architecture
+- Controllers: request/response only, call services
+- Services: business logic, external integrations
+- Models: validation schemas (Joi), database types
+- Never expose internal DB IDs in public API responses
 
-- Never expose database IDs in public API responses
-- Use environment variables for secrets (create `.env` file, add to `.gitignore`)
+## API Design
+
+- Public endpoints: `/public` prefix, no auth (except login)
+- Private endpoints: Supabase Bearer token, validate roles for writes
+- RESTful patterns: GET/POST/PUT/DELETE for collections and resources
+
+## Security
+
+- Use environment variables for secrets (`.env` - never commit)
 - Validate authentication tokens on private routes
 - Sanitize user input before database queries
 
-### Configuration
-
-- Store configuration in a `config/` directory
-- Use environment variables for environment-specific values
-- Never commit secrets to version control
-
-## API Design Guidelines
-
-### Public Endpoints
-
-- Located under `/public` prefix
-- No authentication required (except login)
-- Never expose internal IDs in responses
-
-### Private Endpoints
-
-- Require Supabase authentication via Bearer token
-- Validate user role before allowing write operations
-
-### RESTful Patterns
-
-```javascript
-// GET collection
-router.get('/products', productController.getProducts);
-
-// GET single
-router.get('/products/:id', productController.getProduct);
-
-// POST create
-router.post('/products', productController.createProduct);
-
-// PUT update
-router.put('/products/:id', productController.updateProduct);
-
-// DELETE
-router.delete('/products/:id', productController.deleteProduct);
-```
-
 ## Documentation
 
-- Update `docs/` files when making architectural changes
-- Document new endpoints in BUSINESS_LOGIC.md
-- Add new data models to DATA.md
+Update `docs/` files when making architectural changes.
 
 ## Git Workflow
 
-- Create feature branches for new functionality
-- Write meaningful commit messages
-- Do not commit node_modules or sensitive files
+- Feature branches, meaningful commit messages
+- Never commit `.env`, node_modules, or secrets
 
-## Dependencies to Add
+## Skills
 
-For a production-ready backend, consider adding:
-
-```bash
-# Testing
-npm install --save-dev jest supertest
-
-# Linting & Formatting
-npm install --save-dev eslint prettier eslint-config-prettier
-
-# Validation
-npm install joi
-
-# Environment variables
-npm install dotenv
-```
-
----
-
-## Installed Skills
-
-The following skills are available for this project. Use them when working on specific tasks:
-
-### express-production
-**When to use:** When building new API endpoints, implementing middleware, or preparing the backend for production deployment.
-
-### supabase-postgres-best-practices
-**When to use:** When working with database queries, designing schemas, implementing RLS policies, or optimizing PostgreSQL operations.
-
-### javascript-typescript-jest
-**When to use:** When writing tests for backend functionality. Currently no test framework is configured - consider setting up Jest as mentioned in the Dependencies to Add section.
-
----
-
-## Skill Usage Guidelines
-
-- **express-production**: Follows production-ready patterns for Express apps (error handling, security, performance)
-- **supabase-postgres-best-practices**: Applies PostgreSQL optimization and Supabase-specific best practices
-- **javascript-typescript-jest**: Provides testing patterns and conventions for JavaScript/TypeScript
+- **express-production:** Production-ready Express patterns
+- **supabase-postgres-best-practices:** PostgreSQL/Supabase optimization
+- **javascript-typescript-jest:** Testing patterns
