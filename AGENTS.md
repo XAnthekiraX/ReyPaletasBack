@@ -263,3 +263,26 @@ npm install joi
 # Environment variables
 npm install dotenv
 ```
+
+---
+
+## Installed Skills
+
+The following skills are available for this project. Use them when working on specific tasks:
+
+### express-production
+**When to use:** When building new API endpoints, implementing middleware, or preparing the backend for production deployment.
+
+### supabase-postgres-best-practices
+**When to use:** When working with database queries, designing schemas, implementing RLS policies, or optimizing PostgreSQL operations.
+
+### javascript-typescript-jest
+**When to use:** When writing tests for backend functionality. Currently no test framework is configured - consider setting up Jest as mentioned in the Dependencies to Add section.
+
+---
+
+## Skill Usage Guidelines
+
+- **express-production**: Follows production-ready patterns for Express apps (error handling, security, performance)
+- **supabase-postgres-best-practices**: Applies PostgreSQL optimization and Supabase-specific best practices
+- **javascript-typescript-jest**: Provides testing patterns and conventions for JavaScript/TypeScript
