@@ -1,50 +1,72 @@
-# AGENTS.md - Agentic Coding Guidelines for ReyPaletasBack
+# AGENTS.md
 
-This file provides guidelines for AI agents working on this codebase.
-
----
+This file provides guidelines for AI agents working on the ReyPaletas backend codebase.
 
 ## Project Overview
 
-- **Project Type:** Node.js/Express REST API Backend
-- **Database:** Supabase (PostgreSQL)
-- **Authentication:** Supabase Auth
-- **Email Service:** Resend
-- **Deployment:** Vercel
+- **Project Type:** Node.js/Express.js REST API Backend
+- **Package Manager:** npm
+- **Module System:** CommonJS (`"type": "commonjs"` in package.json)
+- **Runtime:** Node.js
+- **Key Dependencies:** Express 5.x
+- **External Services:** Supabase (auth + PostgreSQL), Resend (email)
 
----
+## Directory Structure
 
-## Build, Lint, and Test Commands
-
-### Installation
-
-```bash
-npm install
 ```
+backend/
+├── ai/                   # AI agents, skills, and tasks (future use)
+│   ├── agents/
+│   ├── skills/
+│   └── tasks/
+├── docs/                 # Documentation
+│   ├── ARCHITECTURE.md
+│   ├── BUSINESS_LOGIC.md
+│   ├── DATA.md
+│   └── REPOSITORY_STRUCTURE.md
+├── src/                  # Source code (create as needed)
+│   ├── models/           # Database models & validation schemas
+│   ├── routes/           # Express route definitions
+│   ├── controllers/      # Request handlers
+│   ├── services/         # Business logic & external integrations
+│   ├── middlewares/      # Express middlewares (auth, validation)
+│   └── utils/            # Helper functions
+├── node_modules/
+├── package.json
+└── package-lock.json
+```
+
+## Available Commands
 
 ### Running the Server
 
 ```bash
-# Development (with auto-reload using nodemon if available)
-node src/index.js
+npm start           # Start the server (requires index.js entry point)
+node index.js       # Run directly
+```
 
-# Production
-NODE_ENV=production node src/index.js
+### Installing Dependencies
+
+```bash
+npm install         # Install all dependencies
 ```
 
 ### Testing
 
-No test framework is currently configured. When implementing tests:
+Currently no test framework is configured. Recommended setup:
 
 ```bash
+# Install testing dependencies
+npm install --save-dev jest supertest
+
 # Run all tests
 npm test
 
-# Run a single test file (Jest example)
-npx jest test/filename.test.js
+# Run a single test file
+npx jest tests/filename.test.js
 
 # Run tests in watch mode
-npx jest --watch
+npm test -- --watch
 ```
 
 ### Linting
@@ -52,78 +74,75 @@ npx jest --watch
 No linter is currently configured. Recommended setup:
 
 ```bash
-# ESLint (if installed)
-npx eslint src/ --ext .js
+# Install ESLint
+npm install --save-dev eslint
 
-# Check a specific file
-npx eslint src/routes/example.js
+# Initialize ESLint
+npx eslint --init
+
+# Run linting
+npm run lint
+
+# Fix auto-fixable issues
+npm run lint -- --fix
 ```
 
-### Type Checking
+## Environment Variables
 
-No TypeScript is currently in use. If TypeScript is added:
+Create a `.env` file in the root directory (copy from `.env.example`):
 
 ```bash
-npx tsc --noEmit
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-key
+
+# Resend (Email Service)
+RESEND_API_KEY=re_123456789
+
+# Server
+PORT=3000
+NODE_ENV=development
+
+# CORS
+CORS_ORIGIN=http://localhost:5173
 ```
 
----
+**Important:** Never commit `.env` files to version control. Only `.env.example` should be tracked.
 
 ## Code Style Guidelines
 
 ### General Principles
 
-- Use **CommonJS** modules (`require`/`exports`) - project uses `"type": "commonjs"`
-- Use **2 spaces** for indentation
-- Use **single quotes** for strings in JavaScript
-- Use **semicolons** at the end of statements
-- Maximum line length: **100 characters**
-- Add a **blank line** between imports and the rest of the code
-
-### File Naming
-
-- **Routes:** `routes/something.js` (e.g., `routes/products.js`)
-- **Controllers:** `controllers/somethingController.js`
-- **Services:** `services/somethingService.js`
-- **Models:** `models/somethingModel.js`
-- **Middlewares:** `middlewares/authMiddleware.js`
-- **Utils:** `utils/helpers.js`
+- Keep functions small and focused (single responsibility)
+- Business logic belongs in services, not controllers
+- Controllers should only handle request/response and call service functions
+- All responses to public endpoints should omit internal IDs
 
 ### Naming Conventions
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Variables | camelCase | `userName`, `isActive` |
-| Constants | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT` |
-| Functions | camelCase | `getUserById()` |
-| Classes | PascalCase | `UserService` |
-| Files/Directories | kebab-case | `user-routes.js` |
-| Database tables | snake_case | `product_variants` |
+- **Files:** kebab-case (e.g., `product-routes.js`, `auth-middleware.js`)
+- **Functions:** camelCase (e.g., `getProducts`, `validateCategory`)
+- **Classes:** PascalCase (e.g., `ProductService`, `AuthMiddleware`)
+- **Constants:** UPPER_SNAKE_CASE (e.g., `MAX_PRODUCTS`, `DEFAULT_PAGE_SIZE`)
+- **Database Tables:** snake_case (e.g., `product_variants`, `announcements`)
 
-### Imports Order
-
-1. Node built-in modules (e.g., `path`, `fs`, `crypto`)
-2. External packages (e.g., `express`, `supabase`)
-3. Internal modules (relative imports)
+### Imports and Exports
 
 ```javascript
-// 1. Built-in
-const path = require('path');
-const crypto = require('crypto');
-
-// 2. External
+// Use CommonJS require/exports
 const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
+const { supabase } = require('./config/supabase');
+const productService = require('../services/product-service');
 
-// 3. Internal
-const productService = require('../services/productService');
-const { validateProduct } = require('../utils/validators');
+// Export at end of file
+module.exports = router;
 ```
 
 ### Error Handling
 
-- Use **try-catch** blocks for async operations
-- Always return proper HTTP status codes:
+- Use try/catch for async operations
+- Return proper HTTP status codes:
   - `200` - Success
   - `201` - Created
   - `400` - Bad Request
@@ -131,209 +150,116 @@ const { validateProduct } = require('../utils/validators');
   - `403` - Forbidden
   - `404` - Not Found
   - `500` - Internal Server Error
-- Log errors appropriately (avoid exposing sensitive data)
-- Use custom error classes for domain-specific errors
 
 ```javascript
-// Good error handling pattern
+// Example error handling pattern
 app.get('/products', async (req, res) => {
   try {
-    const products = await productService.getAll();
-    res.json(products);
+    const products = await productService.getProducts(req.query);
+    res.status(200).json(products);
   } catch (error) {
-    console.error('Error fetching products:', error.message);
-    res.status(500).json({ error: 'Failed to fetch products' });
+    console.error('Error fetching products:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 ```
 
 ### Async/Await
 
-- Always handle promise rejections with try-catch
-- Use **async/await** over raw promises for readability
+- Always use async/await over callbacks or .then() chains
+- Always wrap in try/catch for error handling
 
-```javascript
-// Good
-async function getProduct(id) {
-  try {
-    const product = await db.query('SELECT * FROM products WHERE id = $1', [id]);
-    return product;
-  } catch (error) {
-    throw new Error(`Failed to get product: ${error.message}`);
-  }
-}
-```
+### Request Validation
 
-### Database Operations (Supabase)
-
-- Use parameterized queries to prevent SQL injection
-- Handle null values gracefully
-- Use Supabase row-level security (RLS) policies
-
-```javascript
-// Parameterized query - GOOD
-const { data, error } = await supabase
-  .from('products')
-  .select('*')
-  .eq('category_id', categoryId);
-
-// String concatenation - BAD (SQL injection risk)
-// const query = `SELECT * FROM products WHERE category_id = ${categoryId}`;
-```
+- Validate all input in middleware or at the start of controller functions
+- Use consistent validation error responses
 
 ### Response Format
 
-Use consistent JSON response structure:
+Follow these patterns for consistency:
 
 ```javascript
 // Success response
-res.status(200).json({
-  success: true,
-  data: { /* ... */ }
-});
+res.status(200).json({ data: /* response data */ });
+
+// Creation response
+res.status(201).json({ data: /* created item */ });
 
 // Error response
-res.status(400).json({
-  success: false,
-  error: 'User-friendly error message'
-});
-
-// Paginated response
-res.status(200).json({
-  success: true,
-  data: [...],
-  pagination: {
-    page: 1,
-    limit: 10,
-    total: 100
-  }
-});
+res.status(400).json({ error: 'Descriptive error message' });
 ```
 
-### Validation
+### Security
 
-- Validate all inputs at the route level
-- Use middleware for reusable validation
-- Return specific validation errors
+- Never expose database IDs in public API responses
+- Use environment variables for secrets (create `.env` file, add to `.gitignore`)
+- Validate authentication tokens on private routes
+- Sanitize user input before database queries
+
+### Configuration
+
+- Store configuration in a `config/` directory
+- Use environment variables for environment-specific values
+- Never commit secrets to version control
+
+## API Design Guidelines
+
+### Public Endpoints
+
+- Located under `/public` prefix
+- No authentication required (except login)
+- Never expose internal IDs in responses
+
+### Private Endpoints
+
+- Require Supabase authentication via Bearer token
+- Validate user role before allowing write operations
+
+### RESTful Patterns
 
 ```javascript
-// Middleware example
-function validateProductInput(req, res, next) {
-  const { name, price } = req.body;
-  const errors = [];
+// GET collection
+router.get('/products', productController.getProducts);
 
-  if (!name || typeof name !== 'string') {
-    errors.push('Name is required');
-  }
-  if (typeof price !== 'number' || price < 0) {
-    errors.push('Price must be a positive number');
-  }
+// GET single
+router.get('/products/:id', productController.getProduct);
 
-  if (errors.length > 0) {
-    return res.status(400).json({ success: false, errors });
-  }
+// POST create
+router.post('/products', productController.createProduct);
 
-  next();
-}
+// PUT update
+router.put('/products/:id', productController.updateProduct);
+
+// DELETE
+router.delete('/products/:id', productController.deleteProduct);
 ```
 
-### Security Best Practices
+## Documentation
 
-- **Never commit secrets** - use environment variables for API keys
-- Validate and sanitize all user inputs
-- Use HTTPS in production
-- Implement rate limiting on public endpoints
-- Don't expose stack traces in production errors
-- Use Helmet.js for HTTP headers security
+- Update `docs/` files when making architectural changes
+- Document new endpoints in BUSINESS_LOGIC.md
+- Add new data models to DATA.md
 
-```javascript
-// Environment variables usage
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+## Git Workflow
 
-// Never log sensitive data
-console.log('User login:', user.email); // OK
-console.log('User password:', user.password); // BAD
-```
+- Create feature branches for new functionality
+- Write meaningful commit messages
+- Do not commit node_modules or sensitive files
 
-### Comments
+## Dependencies to Add
 
-- Use **JSDoc** style comments for functions
-- Comment **why**, not **what**
-- Keep comments up to date with code changes
-- Avoid obvious comments
+For a production-ready backend, consider adding:
 
-```javascript
-// Good: explains the reasoning
-// Rate limit to prevent brute-force attacks on login
-app.post('/login', rateLimiter, authController.login);
+```bash
+# Testing
+npm install --save-dev jest supertest
 
-// Bad: states the obvious
-// Loop through users
-users.forEach(user => { ... });
-```
+# Linting & Formatting
+npm install --save-dev eslint prettier eslint-config-prettier
 
----
+# Validation
+npm install joi
 
-## Project Structure
-
-```
-reypaletasback/
-├── ai/                    # AI agents, skills, tasks
-├── docs/                  # Documentation
-├── src/
-│   ├── controllers/       # Request handlers
-│   ├── middlewares/       # Express middleware
-│   ├── models/            # DB models & validation
-│   ├── routes/            # Route definitions
-│   ├── services/          # Business logic
-│   ├── utils/             # Helper functions
-│   └── index.js           # Entry point
-├── package.json
-└── AGENTS.md
-```
-
----
-
-## Environment Variables
-
-Required environment variables (store in `.env`, never commit):
-
-```
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_KEY=your_service_key
-RESEND_API_KEY=your_resend_api_key
-PORT=3000
-```
-
----
-
-## Common Tasks
-
-### Adding a New CRUD Resource
-
-1. Create model in `src/models/`
-2. Create service in `src/services/`
-3. Create controller in `src/controllers/`
-4. Create route in `src/routes/`
-5. Register route in `src/index.js`
-6. Add validation middleware if needed
-
-### Adding a New Public Endpoint
-
-Routes prefixed with `/public` don't require authentication:
-
-```javascript
-router.get('/public/products', productController.getAll);
-```
-
-### Adding a New Protected Endpoint
-
-Use auth middleware for protected routes:
-
-```javascript
-const authMiddleware = require('../middlewares/auth');
-
-router.get('/products', authMiddleware, productController.getAll);
+# Environment variables
+npm install dotenv
 ```

@@ -29,7 +29,7 @@ This system serves as the backend for a web application, providing REST APIs to 
 
 **Responsibilities:**
 
-- Store business data: products, future_products, franchises, announcements
+- Store business data: products (with `exists` flag), franchises, announcements
 - Manage authentication and admin sessions via Supabase Auth
 - Enforce row-level security
 

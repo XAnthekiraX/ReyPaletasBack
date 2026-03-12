@@ -8,21 +8,24 @@ This document defines the folder structure and purpose of each directory for the
 backend/
 ├── ai
 │ ├── agents            # AI agents definitions (managed via OpenCode /init)
-│ ├── skills            # Reusable AI skills or helper modules
-│ └── tasks             # Specific tasks executed by agents
+ │ ├── skills            # Reusable AI skills or helper modules
+ │ └── tasks             # Specific tasks executed by agents
 ├── docs
-│ ├── ARCHITECTURE.md   # System architecture overview
-│ └── REPOSITORY_STRUCTURE.md # This document
+ │ ├── ARCHITECTURE.md   # System architecture overview
+ │ ├── BUSINESS_LOGIC.md # Business rules and logic
+ │ ├── DATA.md          # Database models and schema
+ │ └── REPOSITORY_STRUCTURE.md # This document
 ├── src
-│ ├── models            # Database models and validation schemas
-│ ├── routes            # Express route definitions (public & private endpoints)
-│ ├── controllers       # Request handlers for each route
-│ ├── services          # Business logic, integration with Supabase, Resend
-│ ├── middlewares       # Express middlewares (auth, validation, error handling)
-│ └── utils             # Helper functions and utilities
+ │ ├── models            # Database models and validation schemas
+ │ ├── routes            # Express route definitions (public & private endpoints)
+ │ ├── controllers       # Request handlers for each route
+ │ ├── services          # Business logic, integration with Supabase, Resend
+ │ ├── middlewares       # Express middlewares (auth, validation, error handling)
+ │ └── utils             # Helper functions and utilities
 ├── node_modules        # Node.js dependencies
 ├── package.json        # Project manifest
-└── package-lock.json   # Dependency lockfile
+├── package-lock.json   # Dependency lockfile
+└── .env.example       # Environment variables template (copy to .env)
 ```
 
 ## Folder Purpose
